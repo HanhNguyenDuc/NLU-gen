@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>NLP Data Generator</title>
+
+    <!-- Bootstrap 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="gen_data.css">
+    -->
+    
+    <style>
+      div.msg_bbl {
+        background-color: #ddd;
+        padding: 5px 10px;
+        border-radius: 10px;
+        color: #555;
+        margin-bottom: 5px;
+      }
+    </style>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="container">
+      <form action="" method="POST" id="template-form">
+        <div style="padding-top: 5px;"></div>
+        <div class="row">
+          <div class="col-md-1">
+            <p class="text-capitalize">Template: </p>
+            <p class="font-weight-bold">Bold text.</p>
+          </div>
+          <div class="md-form mb-4 pink-textarea active-pink-textarea-2">
+            <i class="fas fa-angle-double-right prefix"></i>
+            <textarea id="form23" class="md-textarea form-control" rows="3"></textarea>
+            <label for="form23">Material textarea with an always colorful prefix</label>
+          </div>
+          <button type="submit" class="btn btn-success btn-block col-md-5" style="width: 18%; float: left;"><span class="glyphicon glyphicon-send"></span> Send</button>
+        </div>
+      </form>
+      <form action="" method="POST" id="slot-form">
+        <div class="row" id="slot-area">
+        </div>
+        <button type="submit" class="btn btn-success btn-block col-md-5 row" style="width: 18%; float: right;"><span class="glyphicon glyphicon-send"></span> Send</button>
+      </form>
+
+      <div class="display-area form-group">
+
+      </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8">
+      var socket = io.connect( 'http://' + 'localhost' + ':' + '6969' )
+      // $('#label_analysic').text("1234");
+      // broadcast a message
+      socket.on( 'connect', function() {
+        var form = $( '#template-form' ).on('submit', function( e ) {
+          e.preventDefault()
+          let user_input = $('input.message').val()
+          $('#message_display').animate({scrollTop: 10000})
+          // send data to consumer
+          socket.emit( 'send_template', {
+            message : user_input,
+          })
+          // empty the input field
+          // $( 'input.message' ).val( '' ).focus()
+          $('div.message_holder').empty();
+        } )
+
+        var form = $('#slot-form').on('submit', function(e){
+          e.preventDefault();
+          var result_dict = {}
+          $('.slot-field').each(function(index){
+            let key = jQuery(this).children('p').text();
+            let value = jQuery(this).children('input').val();
+            result_dict[key]=value;
+          });
+          let message = $('input.message').val();
+          //console.log(result_dict);
+          socket.emit('send_slots', {
+            slots: result_dict,
+            message: message
+          })
+        })
+      } )
+
+
+
+
+
+      socket.on( 'get_slot', function( msg ) {
+        // show message slot
+        var slot_list = msg;
+        //console.log(msg);
+        for(var i=0; i<slot_list.length; i++){
+          var slot_name = slot_list[i];
+          $("#slot-area").append('<div class="slot-field row"><p class="col-sm-1">' + slot_name + '</p> <input type="text" class=" form-control col-sm-5" placeholder="{subject} do something" style="width: 60%; float: left;"></div>');
+        }
+      } )
+
+
+      socket.on('show_data', function(msg){
+        for (var i = 0; i < msg.length; i++){
+          $('.display-area').append('<p>' + msg[i] + '</p>');
+        }
+      })
+
+
+
+      socket.on( 'get_number_test', function( msg ) {
+        $( 'input.message' ).val('' + msg.index_next)
+        document.getElementById('label_analysic').textContent = "Current File: " + msg.index_current;
+      } )
+
+    </script>
+  </body>
+
+</html>
