@@ -63,8 +63,10 @@
   <!-- Your custom scripts (optional) -->
   <script type="text/javascript" charset="utf-8">
       console.log('this code is executed');
-      var socket = io.connect( 'http://' + 'localhost' + ':' + '6969' );
+      var socket = io.connect( 'http://' + '103.74.122.136' + ':' + '6969' );
       // $('#label_analysic').text("1234");
+
+      var x = Math.floor(Math.random() * 1000000);
       // broadcast a message
       socket.on( 'connect', function() {
         var form = $( '#template-form' ).on('submit', function( e ) {
@@ -72,7 +74,8 @@
           let user_input = $('#form23').val();
           // send data to consumer
           socket.emit( 'send_template', {
-            message : user_input,
+            id: x,
+            message : user_input
           })
           // empty the input field
           // $( 'input.message' ).val( '' ).focus()
@@ -92,15 +95,21 @@
           //console.log(result_dict);
           socket.emit('send_slots', {
             slots: result_dict,
-            message: message
+            message: message,
+            id: x
           })
         })
       } )
 
       socket.on( 'get_slot', function( msg ) {
         // show message slot
-        var slot_list = msg;
-
+        console.log(x);
+        var slot_list = msg.slot_list;
+        let id = msg.id;
+        if (id != x){
+          return ;
+        }
+        
         $("#slot-area").empty();
         //console.log(msg);
         for(var i=0; i<slot_list.length; i++){
@@ -116,11 +125,16 @@
         $('#slot-area').append(
           '<button type="submit" class="btn btn-info">submit slot</button>'
         );
-      } )
+      })
 
 
       socket.on('show_data', function(msg){
-
+        console.log(msg);
+        let id = msg.id;
+        if (id != x){
+          return ;
+        }
+        var msg = msg.message_list;
         $(".display-area").empty();
         for (var i = 0; i < msg.length; i++){
           $('.display-area').append('<p class="mb-0">- ' + msg[i] + '</p>');
